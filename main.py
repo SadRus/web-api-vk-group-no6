@@ -79,7 +79,7 @@ def post_on_wall(owner_id, media_id):
 
 if __name__ == '__main__':
     load_dotenv()
-    
+
     total_comics = get_total_comics()
     comic_content = get_random_comic(total_comics)
     image_url = comic_content['img']
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     filename = get_comic_filename(image_url)
     save_image(filename, image_url)
 
-    access_token = os.environ['vk_access_token']
+    access_token = os.environ['VK_ACCESS_TOKEN']
     vk_version_api = 5.131
     with requests.Session() as session:
         session.params.update(
