@@ -23,8 +23,11 @@ Secondary you must register your app at https://vk.com/apps?act=manage for clien
 Then you need to get access_token within implicit flow method and save it in enviroment variables.
 
 You needs to create .env file in main folder for enviroment variables.
+
 VK_ACCESS_TOKEN - it`s yours access_token, which we get above.
+
 VK_GROUP_ID - you can get group ID at https://regvk.com/id/
+
 VK_VERSION_API - choose API version that you needed.
 
 ### Usage
