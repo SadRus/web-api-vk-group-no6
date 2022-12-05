@@ -65,10 +65,10 @@ def save_wall_photo(photo, hash, server):
     return response.json()['response']
 
 
-def post_on_wall(owner_id, media_id):
+def post_on_wall(group_id, owner_id, media_id):
     url = 'https://api.vk.com/method/wall.post'
     photo = {
-        'owner_id': -217501442,
+        'owner_id': -group_id,
         'message': image_comment,
         'attachments': f'photo{owner_id}_{media_id}',
     }
@@ -88,6 +88,7 @@ if __name__ == '__main__':
     save_image(filename, image_url)
 
     access_token = os.environ['VK_ACCESS_TOKEN']
+    group_id = 217501442
     vk_version_api = 5.131
     with requests.Session() as session:
         session.params.update(
@@ -107,4 +108,4 @@ if __name__ == '__main__':
         wall_photo_content = save_wall_photo(photo, hash, server)
         owner_id = wall_photo_content[0]['owner_id']
         media_id = wall_photo_content[0]['id']
-        post_on_wall(owner_id, media_id)
+        post_on_wall(group_id, owner_id, media_id)
