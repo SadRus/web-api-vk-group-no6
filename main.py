@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 
 
-def get_total_comics():
+def get_comics_count():
     url = 'https://xkcd.com/info.0.json'
     response = requests.get(url)
     response.raise_for_status()
@@ -25,7 +25,7 @@ def get_random_comic(total_comics):
 def get_comic_filename(image_url):
     parsed_image_url = urlparse(image_url).path
     path, extension = os.path.splitext(parsed_image_url)
-    return comic_content['title'] + extension
+    return f"{comic_content['title']}{extension}"
 
 
 def save_image(filename, image_url):
@@ -43,14 +43,14 @@ def get_upload_url():
     return json_content['response']['upload_url']
 
 
-def download_photo_to_server(filename, upload_url):
+def upload_photo_to_server(filename, upload_url):
     with open(filename, 'rb') as file:
         files = {
             'photo': file,
         }
         response = requests.post(upload_url, files=files)
-        response.raise_for_status()
-        return response.json()
+    response.raise_for_status()
+    return response.json()
 
 
 def save_wall_photo(photo, hash, server):
@@ -67,8 +67,9 @@ def save_wall_photo(photo, hash, server):
 
 def post_on_wall(group_id, owner_id, media_id):
     url = 'https://api.vk.com/method/wall.post'
+    group_id = -int(group_id)
     photo = {
-        'owner_id': -group_id,
+        'owner_id': group_id,
         'message': image_comment,
         'attachments': f'photo{owner_id}_{media_id}',
     }
@@ -79,33 +80,34 @@ def post_on_wall(group_id, owner_id, media_id):
 
 if __name__ == '__main__':
     load_dotenv()
-
-    total_comics = get_total_comics()
-    comic_content = get_random_comic(total_comics)
-    image_url = comic_content['img']
-    image_comment = comic_content['alt']
+    comics_count = get_comics_count()
+    comic_content = get_random_comic(comics_count)
+    image_url, image_comment = comic_content['img'], comic_content['alt']
     filename = get_comic_filename(image_url)
     save_image(filename, image_url)
 
     access_token = os.environ['VK_ACCESS_TOKEN']
-    group_id = 217501442
-    vk_version_api = 5.131
+    group_id = os.environ['VK_GROUP_ID']
+    vk_version_api = os.environ['VK_VERSION_API']
+
     with requests.Session() as session:
         session.params.update(
             {
             'access_token': access_token,
             'v': vk_version_api,
         })
-
         upload_url = get_upload_url()
-        server_photo_content = download_photo_to_server(filename, upload_url)
-        os.remove(filename)
+
+        try:
+            server_photo_content = upload_photo_to_server(filename, upload_url)
+        finally:    
+            os.remove(filename)
 
         photo = server_photo_content['photo']
-        hash = server_photo_content['hash']
+        photo_hash = server_photo_content['hash']
         server =  server_photo_content['server']
     
-        wall_photo_content = save_wall_photo(photo, hash, server)
+        wall_photo_content = save_wall_photo(photo, photo_hash, server)
         owner_id = wall_photo_content[0]['owner_id']
         media_id = wall_photo_content[0]['id']
         post_on_wall(group_id, owner_id, media_id)
