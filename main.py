@@ -53,11 +53,11 @@ def upload_photo_to_server(filename, upload_url):
     return response.json()
 
 
-def save_wall_photo(photo, hash, server):
+def save_wall_photo(photo, photo_hash, server):
     url = 'https://api.vk.com/method/photos.saveWallPhoto'
     payload = {
         'photo': photo,
-        'hash': hash,
+        'hash': photo_hash,
         'server': server,
     }
     response = session.post(url, data=payload)
@@ -70,6 +70,7 @@ def post_on_wall(group_id, owner_id, media_id):
     group_id = -int(group_id)
     photo = {
         'owner_id': group_id,
+        'from_group': True,
         'message': image_comment,
         'attachments': f'photo{owner_id}_{media_id}',
     }
@@ -80,15 +81,16 @@ def post_on_wall(group_id, owner_id, media_id):
 
 if __name__ == '__main__':
     load_dotenv()
-    comics_count = get_comics_count()
-    comic_content = get_random_comic(comics_count)
-    image_url, image_comment = comic_content['img'], comic_content['alt']
-    filename = get_comic_filename(image_url)
-    save_image(filename, image_url)
-
     access_token = os.environ['VK_ACCESS_TOKEN']
     group_id = os.environ['VK_GROUP_ID']
     vk_version_api = os.environ['VK_VERSION_API']
+
+    comics_count = get_comics_count()
+    comic_content = get_random_comic(comics_count)
+    image_url = comic_content['img']
+    image_comment = comic_content['alt']
+    filename = get_comic_filename(image_url)
+    save_image(filename, image_url)
 
     with requests.Session() as session:
         session.params.update(
@@ -96,10 +98,10 @@ if __name__ == '__main__':
             'access_token': access_token,
             'v': vk_version_api,
         })
-        upload_url = get_upload_url()
-
         try:
-            server_photo_content = upload_photo_to_server(filename, upload_url)
+            upload_url = get_upload_url()
+            server_photo_content = upload_photo_to_server(filename, 
+                                                          upload_url)
         finally:    
             os.remove(filename)
 
